@@ -13,6 +13,7 @@ import {
 } from '../types';
 import { ScreenContext } from '../screen/screenContext';
 import { Alert } from 'react-native';
+import { Http } from '../../http';
 
 export const TodoState = ({ children }) => {
 	const initialState = {
@@ -26,18 +27,17 @@ export const TodoState = ({ children }) => {
 	const [state, dispatch] = useReducer(todoReducer, initialState);
 
 	const addTodo = async (title) => {
-		const response = await fetch(
-			'https://rn-todo-app-beea5-default-rtdb.europe-west1.firebasedatabase.app/todos.json',
-			{
-				method: 'POST',
-				headers: { 'Content-Type': 'application/json' },
-				body: JSON.stringify({ title }),
-			}
-		);
-
-		const data = await response.json();
-
-		dispatch({ type: ADD_TODO, title, id: data.name });
+		clearError();
+		try {
+			const data = await Http.post(
+				'https://rn-todo-app-beea5-default-rtdb.europe-west1.firebasedatabase.app/todos.json',
+				{ title }
+			);
+			dispatch({ type: ADD_TODO, title, id: data.name });
+		} catch (e) {
+			showError('Something gone wrong');
+			console.log(e);
+		}
 	};
 
 	const removeTodo = (id) => {
@@ -56,14 +56,8 @@ export const TodoState = ({ children }) => {
 					style: 'destructive',
 					onPress: async () => {
 						changeScreen(null);
-						await fetch(
-							`https://rn-todo-app-beea5-default-rtdb.europe-west1.firebasedatabase.app/todos/${id}.json`,
-							{
-								method: 'DELETE',
-								headers: {
-									'Content-Type': 'application/json',
-								},
-							}
+						await Http.delete(
+							`https://rn-todo-app-beea5-default-rtdb.europe-west1.firebasedatabase.app/todos/${id}.json`
 						);
 						dispatch({ type: REMOVE_TODO, id });
 					},
@@ -78,15 +72,9 @@ export const TodoState = ({ children }) => {
 		clearError();
 
 		try {
-			const response = await fetch(
-				'https://rn-todo-app-beea5-default-rtdb.europe-west1.firebasedatabase.app/todos.json',
-				{
-					method: 'GET',
-					headers: { 'Content-Type': 'application/json' },
-				}
+			const data = await Http.get(
+				'https://rn-todo-app-beea5-default-rtdb.europe-west1.firebasedatabase.app/todos.json'
 			);
-			const data = await response.json();
-			// console.log('Data is: ', data);
 
 			const todos = Object.keys(data).map((key) => ({
 				...data[key],
@@ -105,13 +93,9 @@ export const TodoState = ({ children }) => {
 		clearError();
 
 		try {
-			await fetch(
+			await Http.patch(
 				`https://rn-todo-app-beea5-default-rtdb.europe-west1.firebasedatabase.app/todos/${id}.json`,
-				{
-					method: 'PATCH',
-					headers: { 'Content-Type': 'application/json' },
-					body: JSON.stringify({ title }),
-				}
+				{ title }
 			);
 			dispatch({ type: UPDATE_TODO, id, title });
 		} catch (e) {
