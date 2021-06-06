@@ -16,8 +16,8 @@ export const TodoScreen = () => {
 
 	const todo = todos.find((t) => t.id === todoId);
 
-	const saveHandler = (title) => {
-		updateTodo(todo.id, title);
+	const saveHandler = async (title) => {
+		await updateTodo(todo.id, title);
 		setModal(false);
 	};
 
@@ -41,14 +41,16 @@ export const TodoScreen = () => {
 				<View style={styles.button}>
 					<AppButton
 						onPress={() => changeScreen(null)}
-						color={THEME.GREY_COLOR}>
+						color={THEME.GREY_COLOR}
+					>
 						<AntDesign name='back' size={20} color='#fff' />
 					</AppButton>
 				</View>
 				<View style={styles.button}>
 					<AppButton
 						color={THEME.DANGER_COLOR}
-						onPress={() => removeTodo(todo.id)}>
+						onPress={() => removeTodo(todo.id)}
+					>
 						<FontAwesome name='remove' size={20} color='#fff' />
 					</AppButton>
 				</View>

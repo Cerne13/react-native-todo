@@ -17,7 +17,7 @@ import { Alert } from 'react-native';
 export const TodoState = ({ children }) => {
 	const initialState = {
 		todos: [],
-		loading: false,
+		loading: true,
 		error: null,
 	};
 
@@ -36,7 +36,6 @@ export const TodoState = ({ children }) => {
 		);
 
 		const data = await response.json();
-		console.log('ID: ', data.name);
 
 		dispatch({ type: ADD_TODO, title, id: data.name });
 	};
@@ -55,8 +54,17 @@ export const TodoState = ({ children }) => {
 				{
 					text: 'Удалить',
 					style: 'destructive',
-					onPress: () => {
+					onPress: async () => {
 						changeScreen(null);
+						await fetch(
+							`https://rn-todo-app-beea5-default-rtdb.europe-west1.firebasedatabase.app/todos/${id}.json`,
+							{
+								method: 'DELETE',
+								headers: {
+									'Content-Type': 'application/json',
+								},
+							}
+						);
 						dispatch({ type: REMOVE_TODO, id });
 					},
 				},
@@ -66,25 +74,51 @@ export const TodoState = ({ children }) => {
 	};
 
 	const fetchTodos = async () => {
-		const response = await fetch(
-			'https://rn-todo-app-beea5-default-rtdb.europe-west1.firebasedatabase.app/todos.json',
-			{
-				method: 'GET',
-				headers: { 'Content-Type': 'application/json' },
-			}
-		);
-		const data = await response.json();
-		console.log('Data is: ', data);
+		showLoader();
+		clearError();
 
-		const todos = Object.keys(data).map((key) => ({
-			...data[key],
-			id: key,
-		}));
-		dispatch({ type: FETCH_TODOS, todos });
+		try {
+			const response = await fetch(
+				'https://rn-todo-app-beea5-default-rtdb.europe-west1.firebasedatabase.app/todos.json',
+				{
+					method: 'GET',
+					headers: { 'Content-Type': 'application/json' },
+				}
+			);
+			const data = await response.json();
+			// console.log('Data is: ', data);
+
+			const todos = Object.keys(data).map((key) => ({
+				...data[key],
+				id: key,
+			}));
+			dispatch({ type: FETCH_TODOS, todos });
+		} catch (e) {
+			showError('Something went wrong.');
+			console.log(e);
+		} finally {
+			hideLoader();
+		}
 	};
 
-	const updateTodo = (id, title) =>
-		dispatch({ type: UPDATE_TODO, id, title });
+	const updateTodo = async (id, title) => {
+		clearError();
+
+		try {
+			await fetch(
+				`https://rn-todo-app-beea5-default-rtdb.europe-west1.firebasedatabase.app/todos/${id}.json`,
+				{
+					method: 'PATCH',
+					headers: { 'Content-Type': 'application/json' },
+					body: JSON.stringify({ title }),
+				}
+			);
+			dispatch({ type: UPDATE_TODO, id, title });
+		} catch (e) {
+			showError('Something went wrong.');
+			console.log(e);
+		}
+	};
 
 	const showLoader = () => dispatch({ type: SHOW_LOADER });
 	const hideLoader = () => dispatch({ type: HIDE_LOADER });
@@ -101,7 +135,8 @@ export const TodoState = ({ children }) => {
 				removeTodo,
 				updateTodo,
 				fetchTodos,
-			}}>
+			}}
+		>
 			{children}
 		</TodoContext.Provider>
 	);

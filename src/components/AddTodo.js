@@ -1,12 +1,5 @@
 import React, { useState } from 'react';
-import {
-	View,
-	StyleSheet,
-	TextInput,
-	Button,
-	Alert,
-	Keyboard,
-} from 'react-native';
+import { View, StyleSheet, TextInput, Alert, Keyboard } from 'react-native';
 import { AntDesign } from '@expo/vector-icons';
 import { THEME } from '../theme';
 
@@ -36,7 +29,8 @@ export const AddTodo = ({ onSubmit }) => {
 			<AntDesign.Button
 				onPress={pressHandler}
 				name='pluscircleo'
-				backgroundColor={THEME.MAIN_COLOR}>
+				backgroundColor={THEME.MAIN_COLOR}
+			>
 				Добавить
 			</AntDesign.Button>
 			{/* <Button title='Добавить' onPress={pressHandler} /> */}
